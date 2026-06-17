@@ -43,17 +43,16 @@ export default function WebRTCPanel({
   const audioContextsRef = useRef<Map<string, { interval: any; node: AnalyserNode }>>(new Map());
 
   // Google public STUN servers for NAT-buster connections with optimized candidate bundling & pre-gathering
-  const iceConfiguration = {
-    iceServers: [
-      { urls: "stun:stun1.l.google.com:19302" },
-      { urls: "stun:stun2.l.google.com:19302" },
-      { urls: "stun:stun3.l.google.com:19302" },
-      { urls: "stun:stun4.l.google.com:19302" },
-    ],
-    iceCandidatePoolSize: 10,
-    bundlePolicy: "max-bundle" as RTCBundlePolicy,
-    rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
-  };
+  const iceConfiguration: RTCConfiguration = {
+  iceServers: [
+    {
+      urls: [
+        "stun:stun.l.google.com:19302",
+        "stun:stun1.l.google.com:19302"
+      ]
+    }
+  ]
+};
 
   // Turn off all streams on unmount
   useEffect(() => {
@@ -126,7 +125,17 @@ export default function WebRTCPanel({
         const { pc } = peerData;
 
         if (signal.sdp) {
-          await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+          if (
+            pc.signalingState === "have-local-offer" &&
+            signal.sdp.type === "offer"
+          ) {
+            console.log("Ignoring conflicting offer");
+            return;
+          }
+          
+          await pc.setRemoteDescription(
+            new RTCSessionDescription(signal.sdp)
+          );
           
           if (signal.sdp.type === "offer") {
             // New stream offer received, answer immediately
@@ -295,7 +304,11 @@ export default function WebRTCPanel({
         });
       }
 
-      const offer = await pc.createOffer();
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      });
+
       await pc.setLocalDescription(offer);
 
       socket.emit("signal", {
@@ -454,7 +467,13 @@ export default function WebRTCPanel({
       // Add screen tracks to all peer connections
       peersRef.current.forEach(({ pc, socketId }) => {
         screenStream.getTracks().forEach((track) => {
-          pc.addTrack(track, screenStream);
+          const alreadyExists = pc
+            .getSenders()
+            .some((s) => s.track?.id === track.id);
+            
+          if (!alreadyExists) {
+            pc.addTrack(track, screenStream);
+          }
         });
 
         pc.createOffer()
