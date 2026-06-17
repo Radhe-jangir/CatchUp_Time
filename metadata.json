@@ -1,0 +1,6 @@
+{
+  "name": "MovieDekhe",
+  "description": "Ultra-low latency watch party platform with real-time video sync, WebRTC screen share, voice, and video chat.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,14 @@
+# Render.com Deployment Configuration for MovieDekhe
+# One-click deployment for a robust full-stack Socket.IO + Express server
+services:
+  - type: web
+    name: moviedekhe
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
