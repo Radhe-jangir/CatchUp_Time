@@ -111,21 +111,21 @@ export default function App() {
       }
     );
 
-    setSocket(socketInstance);
+    setSocket(socket);
 
-    socketInstance.emit("join-room", {
+    socket.emit("join-room", {
       roomId: rId,
       userName: name,
       avatar: pfp,
     });
 
-    socketInstance.on("sync-init-state", ({ roomState: initialRoom, yourId }: { roomState: RoomState; yourId: string }) => {
+    socket.on("sync-init-state", ({ roomState: initialRoom, yourId }: { roomState: RoomState; yourId: string }) => {
       setMyId(yourId);
       setRoomState(initialRoom);
       setPlayerState(initialRoom.playerState);
     });
 
-    socketInstance.on("room-updated", (updatedRoom: RoomState) => {
+    socket.on("room-updated", (updatedRoom: RoomState) => {
       setRoomState(updatedRoom);
       setPlayerState(updatedRoom.playerState);
       
@@ -138,11 +138,11 @@ export default function App() {
       }
     });
 
-    socketInstance.on("playback-synced", (newPlayerState: PlayerState) => {
+    socket.on("playback-synced", (newPlayerState: PlayerState) => {
       setPlayerState(newPlayerState);
     });
 
-    socketInstance.on("message-received", (newMessage: Message) => {
+    socket.on("message-received", (newMessage: Message) => {
       setRoomState((prev) => {
         if (!prev) return null;
         return {
