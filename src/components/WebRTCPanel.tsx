@@ -132,7 +132,7 @@ export default function WebRTCPanel({
             console.log("Ignoring conflicting offer");
             return;
           }
-          
+
           await pc.setRemoteDescription(
             new RTCSessionDescription(signal.sdp)
           );
@@ -451,12 +451,13 @@ export default function WebRTCPanel({
   const startScreenShare = async () => {
     try {
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-      });
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 15, max: 20 }
+      },
+      audio: false
+    });
 
       localScreenStreamRef.current = screenStream;
       setIsSharingScreen(true);
