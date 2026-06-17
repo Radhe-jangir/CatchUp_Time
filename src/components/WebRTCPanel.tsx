@@ -167,22 +167,15 @@ export default function WebRTCPanel({
             });
           }
         } else if (signal.candidate) {
-          const candStr = (signal.candidate.candidate || "").toLowerCase();
-          // Filter out link-local IPv6 (fe80::) or non-routable interfaces which introduce 5-10 second ICE validation timeouts
-          const isSlowIP = candStr.includes("fe80:") || (candStr.includes(":") && candStr.includes("typ srflx"));
-          if (!isSlowIP) {
-            // Prioritize adding host/relay candidates immediately
-            const isPriority = candStr.includes("typ host") || candStr.includes("typ relay");
-            if (isPriority) {
-              await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
-            } else {
-              // Add other candidates cleanly
-              await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+            if (!pc.remoteDescription) {
+              console.log("Waiting for remote description");
+              return;
             }
-          } else {
-            console.log("[ICE] Filtered out unroutable/slow candidate to accelerate media stream launch:", candStr);
+          
+            await pc.addIceCandidate(
+              new RTCIceCandidate(signal.candidate)
+            );
           }
-        }
       } catch (err) {
         console.warn("Error processing WebRTC signaling metadata", err);
       }
@@ -242,12 +235,18 @@ export default function WebRTCPanel({
       }
     };
 
+
     pc.ontrack = (event) => {
       const remoteStream = event.streams[0];
       if (remoteStream) {
         // Look up member to classify if this is screen stream or camera stream
         const member = members.find((m) => m.id === peerSocketId);
         const isScreenStream = member && member.screenStreamId && remoteStream.id === member.screenStreamId;
+        console.log(
+          "REMOTE STREAM",
+           remoteStream.id,
+           member?.screenStreamId
+         );
         const targetId = isScreenStream ? `${peerSocketId}-screen` : peerSocketId;
         const targetName = isScreenStream ? `${peerName} (Screen)` : peerName;
 
@@ -448,16 +447,14 @@ export default function WebRTCPanel({
   };
 
   // Start Screen Sharing to deliver visual streams to spectators
-  const startScreenShare = async () => {
-    try {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({
-      video: {
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        frameRate: { ideal: 15, max: 20 }
-      },
-      audio: true
-    });
+  const screenStream = await navigator.mediaDevices.getDisplayMedia({
+  video: {
+    width: { ideal: 854 },
+    height: { ideal: 480 },
+    frameRate: { ideal: 12, max: 15 }
+  },
+  audio: false
+});
 
       localScreenStreamRef.current = screenStream;
       setIsSharingScreen(true);
@@ -789,6 +786,7 @@ export default function WebRTCPanel({
                         }
                       }}
                       autoPlay
+                      muted
                       playsInline
                       className="w-full h-full object-cover"
                     />
