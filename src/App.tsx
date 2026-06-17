@@ -104,11 +104,12 @@ export default function App() {
 
     // Initialize Socket connection
     // Production & Development both share the Express port, so connect to window.location.origin
-    const socketInstance = io(window.location.origin, {
-      transports: ["websocket"],
-      reconnectionAttempts: 8,
-      reconnectionDelay: 2000,
-    });
+    const socket = io(
+      "https://moviedekhe.onrender.com",
+      {
+        transports: ["websocket", "polling"]
+      }
+    );
 
     setSocket(socketInstance);
 
