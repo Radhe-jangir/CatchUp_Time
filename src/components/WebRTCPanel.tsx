@@ -456,7 +456,7 @@ export default function WebRTCPanel({
         height: { ideal: 720 },
         frameRate: { ideal: 15, max: 20 }
       },
-      audio: false
+      audio: true
     });
 
       localScreenStreamRef.current = screenStream;
